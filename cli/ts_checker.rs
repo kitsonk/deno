@@ -2,8 +2,8 @@
 
 use crate::diagnostics::Diagnostics;
 use crate::file_fetcher::TextDocument;
-use crate::graph::ModuleProvider;
-use crate::graph::Stats;
+use crate::module_graph_2::Graph;
+use crate::module_graph_2::Stats;
 use crate::media_type::MediaType;
 use crate::tsc_config::TsConfig;
 
@@ -43,12 +43,12 @@ pub struct CheckerState {
   emitted_files: Vec<EmittedFile>,
   maybe_build_info: Option<TextDocument>,
   maybe_result: Option<CheckerResult>,
-  provider: Rc<RefCell<dyn ModuleProvider>>,
+  provider: Rc<RefCell<Graph>>,
 }
 
 impl CheckerState {
   pub fn new(
-    provider: Rc<RefCell<dyn ModuleProvider>>,
+    provider: Rc<RefCell<Graph>>,
     hash_data: Vec<Vec<u8>>,
     maybe_build_info: Option<TextDocument>,
   ) -> Self {
@@ -265,7 +265,7 @@ pub struct Request<'a> {
 pub fn exec<'a>(
   request: Request<'a>,
   snapshot: Snapshot,
-  provider: Rc<RefCell<dyn ModuleProvider>>,
+  provider: Rc<RefCell<Graph>>,
   hash_data: Vec<Vec<u8>>,
   maybe_build_info: Option<TextDocument>,
 ) -> Result<ExecResult, AnyError> {
@@ -325,8 +325,8 @@ mod tests {
   use super::*;
   use crate::diagnostics::Diagnostic;
   use crate::diagnostics::DiagnosticCategory;
-  use crate::graph::tests::MockModuleProvider;
-  use crate::graph::Stat;
+  use crate::module_graph_2::tests::MockModuleProvider;
+  use crate::module_graph_2::Stat;
   use crate::js;
   use std::collections::HashMap;
 
