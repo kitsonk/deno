@@ -5,6 +5,9 @@
 
 declare namespace globalThis {
   declare namespace __bootstrap {
+    declare var event: {
+      Event: typeof Event;
+    };
     declare var eventTarget: {
       EventTarget: typeof EventTarget;
     };

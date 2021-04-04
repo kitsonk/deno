@@ -11,6 +11,7 @@ use deno_core::RuntimeOptions;
 use deno_runtime::deno_console;
 use deno_runtime::deno_crypto;
 use deno_runtime::deno_fetch;
+use deno_runtime::deno_indexeddb;
 use deno_runtime::deno_url;
 use deno_runtime::deno_web;
 use deno_runtime::deno_webgpu;
@@ -70,6 +71,7 @@ fn create_compiler_snapshot(
   op_crate_libs.insert("deno.webgpu", deno_webgpu::get_declaration());
   op_crate_libs.insert("deno.websocket", deno_websocket::get_declaration());
   op_crate_libs.insert("deno.crypto", deno_crypto::get_declaration());
+  op_crate_libs.insert("deno.indexeddb", deno_indexeddb::get_declaration());
 
   // ensure we invalidate the build properly.
   for (_, path) in op_crate_libs.iter() {

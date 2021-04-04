@@ -1208,6 +1208,7 @@
     setEventTargetData,
   };
   window.__bootstrap.event = {
+    Event,
     setIsTrusted,
   };
 })(this);

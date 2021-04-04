@@ -31,6 +31,7 @@ delete Object.prototype.__proto__;
   const file = window.__bootstrap.file;
   const fetch = window.__bootstrap.fetch;
   const prompt = window.__bootstrap.prompt;
+  const indexedDB = window.__bootstrap.indexedDB;
   const denoNs = window.__bootstrap.denoNs;
   const denoNsUnstable = window.__bootstrap.denoNsUnstable;
   const errors = window.__bootstrap.errors.errors;
@@ -263,6 +264,17 @@ delete Object.prototype.__proto__;
     FileReader: util.nonEnumerable(fileReader.FileReader),
     FormData: util.nonEnumerable(fetch.FormData),
     Headers: util.nonEnumerable(headers.Headers),
+    IDBCursor: util.nonEnumerable(indexedDB.IDBCursor),
+    IDBCursorWithValue: util.nonEnumerable(indexedDB.IDBCursorWithValue),
+    IDBDatabase: util.nonEnumerable(indexedDB.IDBDatabase),
+    IDBFactory: util.nonEnumerable(indexedDB.IDBFactory),
+    IDBIndex: util.nonEnumerable(indexedDB.IDBIndex),
+    IDBKeyRange: util.nonEnumerable(indexedDB.IDBKeyRange),
+    IDBObjectStore: util.nonEnumerable(indexedDB.IDBObjectStore),
+    IDBOpenDBRequest: util.nonEnumerable(indexedDB.IDBOpenDBRequest),
+    IDBRequest: util.nonEnumerable(indexedDB.IDBRequest),
+    IDBTransaction: util.nonEnumerable(indexedDB.IDBTransaction),
+    IDBVersionChangeEvent: util.nonEnumerable(indexedDB.IDBVersionChangeEvent),
     MessageEvent: util.nonEnumerable(MessageEvent),
     Performance: util.nonEnumerable(performance.Performance),
     PerformanceEntry: util.nonEnumerable(performance.PerformanceEntry),
@@ -298,7 +310,7 @@ delete Object.prototype.__proto__;
     performance: util.writable(performance.performance),
     setInterval: util.writable(timers.setInterval),
     setTimeout: util.writable(timers.setTimeout),
-
+    indexedDB: util.readOnly(indexedDB.indexedDB),
     GPU: util.nonEnumerable(webgpu.GPU),
     GPUAdapter: util.nonEnumerable(webgpu.GPUAdapter),
     GPUAdapterLimits: util.nonEnumerable(webgpu.GPUAdapterLimits),

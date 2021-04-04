@@ -18,6 +18,7 @@ fn create_snapshot(
   deno_url::init(&mut js_runtime);
   deno_web::init(&mut js_runtime);
   deno_fetch::init(&mut js_runtime);
+  deno_indexeddb::init(&mut js_runtime);
   deno_websocket::init(&mut js_runtime);
   deno_crypto::init(&mut js_runtime);
   deno_webgpu::init(&mut js_runtime);
