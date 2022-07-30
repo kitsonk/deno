@@ -20,12 +20,17 @@ use deno_core::serde_json;
 use deno_core::serde_json::json;
 use deno_core::serde_json::Value;
 use deno_core::ModuleSpecifier;
+use jsonc_parser::ast;
+use jsonc_parser::common::Range;
+use jsonc_parser::common::Ranged;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fmt;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::Arc;
+use text_lines::TextLines;
 
 pub type MaybeImportsResult =
   Result<Option<Vec<(ModuleSpecifier, Vec<String>)>>, AnyError>;
@@ -434,6 +439,95 @@ pub struct ConfigFileJson {
   pub test: Option<Value>,
 }
 
+#[derive(Debug, Clone)]
+pub enum ConfigDiagnosticKind {
+  InvalidType { expected: String, actual: String },
+  MissingValue,
+}
+
+impl fmt::Display for ConfigDiagnosticKind {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    writeln!(f, "config diagnostic")
+  }
+}
+
+#[derive(Debug, Clone)]
+pub struct ConfigDiagnostic {
+  maybe_range: Option<Range>,
+  kind: ConfigDiagnosticKind,
+}
+
+impl fmt::Display for ConfigDiagnostic {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    writeln!(f, "{}", self.kind)
+  }
+}
+
+#[derive(Debug, Clone)]
+pub struct ConfigDiagnostics {
+  specifier: ModuleSpecifier,
+  diagnostics: Vec<ConfigDiagnostic>,
+  lines: Arc<TextLines>,
+  source: String,
+}
+
+impl ConfigDiagnostics {
+  pub fn new(specifier: ModuleSpecifier, lines: Arc<TextLines>, source: String) -> Self {
+    Self {
+      specifier,
+      diagnostics: Vec::new(),
+      lines,
+      source,
+    }
+  }
+
+  pub fn add(&mut self, kind: ConfigDiagnosticKind, maybe_range: Option<Range>) {
+    self.diagnostics.push(ConfigDiagnostic { kind, maybe_range });
+  }
+
+  pub fn is_empty(&self) -> bool {
+    self.diagnostics.is_empty()
+  }
+}
+
+impl fmt::Display for ConfigDiagnostics {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    for diagnostic in &self.diagnostics {
+      writeln!(f, "{}", diagnostic)?;
+    }
+    Ok(())
+  }
+}
+
+fn to_value_kind(value: &ast::Value) -> String {
+  match value {
+    ast::Value::Array(_) => "array".to_string(),
+    ast::Value::BooleanLit(_) => "boolean".to_string(),
+    ast::Value::NullKeyword(_) => "null".to_string(),
+    ast::Value::NumberLit(_) => "number".to_string(),
+    ast::Value::Object(_) => "object".to_string(),
+    ast::Value::StringLit(_) => "string".to_string(),
+  }
+}
+
+fn get_config_diagnostics(specifier: &ModuleSpecifier, text: &str) -> Result<ConfigDiagnostics, AnyError> {
+  let lines = Arc::new(text_lines::TextLines::new(text));
+  let mut diagnostics = ConfigDiagnostics::new(specifier.clone(), lines.clone(), text.to_string());
+  let result =
+    jsonc_parser::parse_to_ast(text, &Default::default(), &Default::default())?;
+  match &result.value {
+    Some(ast::Value::Object(obj)) => {
+      println!("start: {}", serde_json::json!(lines.line_and_column_display(obj.range.start)));
+    }
+    Some(value) => {
+      diagnostics.add(ConfigDiagnosticKind::InvalidType { expected: "object".to_string(), actual: to_value_kind(value) }, Some(*value.range()));
+    }
+    _ => diagnostics.add(ConfigDiagnosticKind::MissingValue, None),
+  }
+
+  Ok(diagnostics)
+}
+
 #[derive(Clone, Debug)]
 pub struct ConfigFile {
   pub specifier: ModuleSpecifier,
@@ -576,6 +670,7 @@ impl ConfigFile {
         }
       };
     let json: ConfigFileJson = serde_json::from_value(jsonc)?;
+    // let diagnostics = get_config_diagnostics(specifier, text)?;
 
     Ok(Self {
       specifier: specifier.to_owned(),
@@ -1059,5 +1154,22 @@ mod tests {
         .to_string(),
       expected_error,
     );
+  }
+
+  #[test]
+  fn test_diagnostics() {
+    let specifier = ModuleSpecifier::parse("file:///deno.jsonc").unwrap();
+    let diagnostics = get_config_diagnostics(
+      &specifier,
+    //   r#"[{
+    //   "tasks": {
+    //     "build": "deno test",
+    //     "": "deno bundle mod.ts"
+    //   }
+    // }]"#,
+    "[]",
+    )
+    .unwrap();
+    println!("{}", diagnostics);
   }
 }
